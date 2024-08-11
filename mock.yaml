@@ -1,0 +1,31 @@
+assignments:
+  - "100 x 1 Project 1"
+  - "250 x 2 Sketches"
+  - "50 x 1 Participation"
+
+scale:
+  - Letter: "A"
+    Min: 93.0
+  - Letter: "A-"
+    Min: 90.0
+  - Letter: "B+"
+    Min: 87.0
+  - Letter: "B"
+    Min: 83.0
+  - Letter: "B-"
+    Min: 80.0
+  - Letter: "C+"
+    Min: 77.0
+  - Letter: "C"
+    Min: 73.0
+  - Letter: "C-"
+    Min: 70.0
+  - Letter: "D+"
+    Min: 67.0
+  - Letter: "D"
+    Min: 63.0
+  - Letter: "D-"
+    Min: 60.0
+  - Letter: "F"
+    Min: 0
+
