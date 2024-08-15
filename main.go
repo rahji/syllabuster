@@ -1,46 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"strings"
 
-	"github.com/rahji/syllabuster/assignment"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/rahji/syllabuster/config"
-	"github.com/rahji/syllabuster/pie"
-	"github.com/rahji/syllabuster/scale"
+	"github.com/rahji/syllabuster/ui"
 )
 
 func main() {
 
-	conf, err := config.ReadConfig("mock.yaml")
+	conf, err := config.ReadConfig("syllabuster.yaml")
 	if err != nil {
 		log.Fatalf("readconfig %s", err)
 	}
 
-	s := `
-325 x 3 Reading Responses (Readings)
-475 x 6 Technical Exercises (Exercises)
-400 x 1 Presentation/Demo (Demo)
-550 x 2 Project Drafts (Drafts)
-920 x 2 Major Projects (Projects)
-1750 Participation
-`
-	lines := strings.Split(s, "\n")
-	// for windows...
-	for i, line := range lines {
-		lines[i] = strings.TrimSpace(line)
+	p := tea.NewProgram(ui.InitialModel(conf))
+	if _, err := p.Run(); err != nil {
+		log.Fatal(err)
 	}
-
-	al := assignment.NewAssignmentList(lines)
-	fmt.Printf("%s\n\n", al.Markdown())
-
-	fmt.Printf("points: %.0f\n\n", al.SemesterPoints)
-
-	str := scale.Rescale(conf.Scale, al.SemesterPoints)
-
-	fmt.Println("\n\n" + str)
-
-	err = pie.Draw("output.png", al.ChartVals())
 
 }

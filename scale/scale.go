@@ -8,6 +8,10 @@ import (
 	"github.com/rahji/syllabuster/config"
 )
 
+/*
+returns a markdown table containing a letter grade scale that is
+based on an existing scale and a new maximum point value
+*/
 func Rescale(scale []config.Scale, points float64) string {
 	buffer := &bytes.Buffer{}
 

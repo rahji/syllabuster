@@ -31,14 +31,21 @@ type AssignmentList struct {
 }
 
 /*
-returns a new AssignmentList based on a slice of strings
+returns a new AssignmentList
+based on a string containing multiline assignment list
 
 ignores any lines that aren't formatted in one of these ways:
 1) 400 x 2 major projects (projects)
 2) 300 x 1 midterm
 3) 140 final exam (final)
 */
-func NewAssignmentList(input []string) *AssignmentList {
+func NewAssignmentList(in string) *AssignmentList {
+
+	input := strings.Split(in, "\n")
+	// for windows...
+	for i, line := range input {
+		input[i] = strings.TrimSpace(line)
+	}
 
 	var semesterPoints float64
 	var assignments []Assignment
