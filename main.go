@@ -19,11 +19,11 @@ func main() {
 	}
 
 	s := `
-325 x 3 Reading Responses
-475 x 6 Technical Exercises
-400 x 1 Presentation/Demo
-550 x 2 Project Drafts
-920 x 2 Major Projects
+325 x 3 Reading Responses (Readings)
+475 x 6 Technical Exercises (Exercises)
+400 x 1 Presentation/Demo (Demo)
+550 x 2 Project Drafts (Drafts)
+920 x 2 Major Projects (Projects)
 1750 Participation
 `
 	lines := strings.Split(s, "\n")

@@ -3,19 +3,27 @@ package assignment
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/wcharczuk/go-chart/v2"
 )
 
+/*
+an Assignment has TotalPoints (including the optional multiplier),
+a PointString (which includes the optional multiplier),
+and a Name that includes an optional short-name in parenthesis at its end.
+The short-name is used for the pie chart label currently
+*/
 type Assignment struct {
 	TotalPoints float64 // eg: 300
 	PointString string  // eg: "100 x 3"
 	Name        string  // eg: midterm exam
+	ShortName   string  // eg: (midterm)
 }
 
-// includes a slice of Assignment and the buffer := &bytes.Buffertotal points for the semester,
+// includes a slice of Assignment and the total points for the semester,
 // which is used when creating a letter grade scale
 type AssignmentList struct {
 	Assignments    []Assignment
@@ -26,9 +34,9 @@ type AssignmentList struct {
 returns a new AssignmentList based on a slice of strings
 
 ignores any lines that aren't formatted in one of these ways:
-1) 400 x 2 assignment1
-2) 300 x 1 assignment2
-3) 140 assignment3
+1) 400 x 2 major projects (projects)
+2) 300 x 1 midterm
+3) 140 final exam (final)
 */
 func NewAssignmentList(input []string) *AssignmentList {
 
@@ -66,22 +74,26 @@ func NewAssignmentList(input []string) *AssignmentList {
 			name = strings.Join(fields[1:], " ")
 		}
 
+		longname, shortname := extractLongAndShort(name)
+
 		semesterPoints += points
 
 		assignments = append(assignments, Assignment{
 			TotalPoints: points,
 			PointString: pointString,
-			Name:        name,
+			Name:        longname,
+			ShortName:   shortname,
 		})
 	}
 
 	return &AssignmentList{Assignments: assignments, SemesterPoints: semesterPoints}
 }
 
-// returns a slice of chart.Value based on the AssignmentList
+// returns a slice of chart.Value based on the AssignmentList.
+// it uses the ShortName as the chart's label
 func (al *AssignmentList) ChartVals() (vals []chart.Value) {
 	for _, a := range al.Assignments {
-		vals = append(vals, chart.Value{Label: a.Name, Value: a.TotalPoints})
+		vals = append(vals, chart.Value{Label: a.ShortName, Value: a.TotalPoints})
 	}
 	return
 }
@@ -102,4 +114,26 @@ func (al *AssignmentList) Markdown() string {
 		buffer.WriteString(" |\n")
 	}
 	return buffer.String()
+}
+
+/*
+finds a match for a shortname in parenthesis at the end of the string
+returns the original string (without the parenthesized part) and
+the string in parens as the second return value.
+if there is not a shortname in the string then the shortname is set to the original
+*/
+func extractLongAndShort(input string) (string, string) {
+	re := regexp.MustCompile(`\(([^)]+)\)$`)
+	matches := re.FindStringSubmatch(input)
+
+	// more than 1 match means that there were parens
+	if len(matches) > 1 {
+		insideParentheses := matches[1]
+		// remove the parens from the original string
+		result := re.ReplaceAllString(input, "")
+		return strings.TrimSpace(result), insideParentheses
+	}
+
+	// if no match is found, return the original string twice
+	return input, input
 }
