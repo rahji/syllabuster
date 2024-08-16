@@ -3,11 +3,13 @@ package ui
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/timer"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/rahji/syllabuster/assignment"
@@ -24,7 +26,8 @@ var (
 )
 
 type (
-	errMsg error
+	errMsg    error
+	statusMsg string
 )
 
 type model struct {
@@ -34,8 +37,12 @@ type model struct {
 	pngfileinput textinput.Model
 	textarea     textarea.Model
 	conf         config.Config
+	timer        timer.Model
+	status       string
 	err          error
 }
+
+const timeout = time.Second * 2
 
 func InitialModel(cfg config.Config) model {
 
@@ -56,7 +63,7 @@ func InitialModel(cfg config.Config) model {
 	in2.CharLimit = 32
 	in2.SetValue("chart.png")
 
-	return model{
+	m := model{
 		keys:         keys,
 		help:         help.New(),
 		mdfileinput:  in1,
@@ -65,6 +72,8 @@ func InitialModel(cfg config.Config) model {
 		conf:         cfg,
 		err:          nil,
 	}
+	m.timer = timer.NewWithInterval(0, time.Microsecond*50)
+	return m
 }
 
 func (m model) Init() tea.Cmd {
@@ -77,6 +86,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 
+	case timer.TimeoutMsg:
+		m.timer, cmd = m.timer.Update(msg)
+		cmds = append(cmds, cmd)
+	case timer.TickMsg:
+		m.timer, cmd = m.timer.Update(msg)
+		cmds = append(cmds, cmd)
 	case tea.WindowSizeMsg:
 		m.help.Width = msg.Width
 	case tea.KeyMsg:
@@ -84,25 +99,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.Generate):
-			al := assignment.NewAssignmentList(m.textarea.Value())
-
-			letterscale := scale.Rescale(m.conf.Scale, al.SemesterPoints)
-			outputbytes := []byte(letterscale + al.Markdown())
-			err := os.WriteFile(
-				m.mdfileinput.Value(),
-				outputbytes,
-				0666,
-			)
+			err := m.generateFiles()
 			if err != nil {
-				m.err = err
-				return m, nil
+				m.status = fmt.Sprintf("❌ %s", err)
+			} else {
+				m.status = "✅ Saved files"
 			}
-
-			err = pie.Draw(m.pngfileinput.Value(), al.ChartVals())
-			if err == nil {
-				m.err = err
-				return m, nil
-			}
+			m.timer = timer.NewWithInterval(timeout, time.Millisecond*50)
+			return m, m.timer.Init()
 		case key.Matches(msg, m.keys.Tab):
 			if m.textarea.Focused() {
 				m.textarea.Blur()
@@ -140,6 +144,28 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func (m model) generateFiles() error {
+	al := assignment.NewAssignmentList(m.textarea.Value())
+
+	letterscale := scale.Rescale(m.conf.Scale, al.SemesterPoints)
+	outputbytes := []byte(letterscale + al.Markdown())
+	err := os.WriteFile(
+		m.mdfileinput.Value(),
+		outputbytes,
+		0666,
+	)
+	if err != nil {
+		return err
+	}
+
+	err = pie.Draw(m.pngfileinput.Value(), al.ChartVals())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m model) View() string {
 	helpView := m.help.View(m.keys)
 	intro := "Enter your assignments below\n"
@@ -150,12 +176,19 @@ func (m model) View() string {
 	fn1 := "Markdown " + m.mdfileinput.View()
 	fn2 := "PNG file " + m.pngfileinput.View()
 
-	return fmt.Sprintf("\n%s\n%s\n%s\n\n%s\n%s\n\n%s\n\n",
+	var statusLine string
+	if !m.timer.Timedout() {
+		statusLine = m.status
+		m.status = ""
+	}
+
+	return fmt.Sprintf("\n%s\n%s\n%s\n\n%s\n%s\n\n%s\n\n%s\n\n",
 		intro,
 		greyStyle.Render(eg),
 		ta,
 		fn1,
 		fn2,
 		helpView,
+		statusLine,
 	)
 }
