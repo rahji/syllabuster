@@ -37,6 +37,13 @@ The requirements are:
 
 Run the command by entering `syllabuster` from your terminal 
 
+## Screenshot
+
+![image](https://github.com/user-attachments/assets/a72a0ec8-8817-452a-9e11-cb59a51b9335)
+
+## Sample PNG Output
+![image](https://github.com/user-attachments/assets/8a4a306e-418a-4287-b729-d1dcb5d36f76)
+
 ## Notes
 
 * The configuration file also contains the assignments and points but that's unused at the moment.
