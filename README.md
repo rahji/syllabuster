@@ -42,8 +42,10 @@ Run the command by entering `syllabuster` from your terminal
 ![image](https://github.com/user-attachments/assets/a72a0ec8-8817-452a-9e11-cb59a51b9335)
 
 ## Sample PNG Output
-![image](https://github.com/user-attachments/assets/8a4a306e-418a-4287-b729-d1dcb5d36f76)
+
+![smallerchart](https://github.com/user-attachments/assets/eeabef41-aefd-4aab-b580-91a6137c8f50)
 
 ## Notes
 
 * The configuration file also contains the assignments and points but that's unused at the moment.
+* The PNG file is 700 pixels x 700 pixels
