@@ -16,8 +16,6 @@ func Rescale(scale []config.Scale, points float64) string {
 	buffer := &bytes.Buffer{}
 
 	buffer.WriteString(`
-# Letter Grade Scale
-
 | Letter | Low | High |
 | :----- | :-- | :--- |
 `)

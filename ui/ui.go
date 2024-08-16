@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/timer"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/rahji/syllabuster/assignment"
 	"github.com/rahji/syllabuster/config"
@@ -19,10 +20,15 @@ import (
 )
 
 var (
-	focusedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("201"))
-	cursorStyle  = focusedStyle
-	noStyle      = lipgloss.NewStyle()
-	greyStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("242"))
+	focusedStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("201"))
+	cursorStyle   = focusedStyle
+	noStyle       = lipgloss.NewStyle()
+	greyStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("242"))
+	leftHalfStyle = lipgloss.NewStyle().
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color("25")).
+			Padding(1).Width(50).Height(24)
+	rightHalfStyle = lipgloss.NewStyle().Padding(4)
 )
 
 type (
@@ -39,6 +45,7 @@ type model struct {
 	conf         config.Config
 	timer        timer.Model
 	status       string
+	preview      string
 	err          error
 }
 
@@ -50,7 +57,7 @@ func InitialModel(cfg config.Config) model {
 	ta.FocusedStyle.CursorLine = noStyle
 	ta.ShowLineNumbers = false
 	ta.SetHeight(18)
-	ta.SetWidth(40)
+	ta.SetWidth(45)
 	ta.Placeholder = ""
 	ta.Cursor.Style = focusedStyle
 	ta.Focus()
@@ -99,11 +106,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.Generate):
-			err := m.generateFiles()
+			preview, err := m.generateFiles()
 			if err != nil {
 				m.status = fmt.Sprintf("❌ %s", err)
 			} else {
 				m.status = "✅ Saved files"
+				m.preview = preview
 			}
 			m.timer = timer.NewWithInterval(timeout, time.Millisecond*50)
 			return m, m.timer.Init()
@@ -144,26 +152,44 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) generateFiles() error {
+// generates the markdown and PNG files.
+// returns a preview string and an error
+func (m model) generateFiles() (string, error) {
 	al := assignment.NewAssignmentList(m.textarea.Value())
 
-	letterscale := scale.Rescale(m.conf.Scale, al.SemesterPoints)
-	outputbytes := []byte(letterscale + al.Markdown())
+	md := fmt.Sprintf(`
+### Grade Distribution
+
+There are %.0f possible points to be earned throughout the semester. 
+*Late submissions earn no points.*
+
+%s
+
+### Letter Grade Key
+
+%s
+`,
+		al.SemesterPoints,
+		al.Markdown(),
+		scale.Rescale(m.conf.Scale, al.SemesterPoints),
+	)
+	outputbytes := []byte(md)
 	err := os.WriteFile(
 		m.mdfileinput.Value(),
 		outputbytes,
 		0666,
 	)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	err = pie.Draw(m.pngfileinput.Value(), al.ChartVals())
+	chartvals := al.ChartVals()
+	err = pie.Draw(m.pngfileinput.Value(), chartvals)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return md, nil
 }
 
 func (m model) View() string {
@@ -173,8 +199,8 @@ func (m model) View() string {
 		"    250 x 1 Midterm Exam (Midterm)\n" +
 		"    1200 Participation\n"
 	ta := m.textarea.View()
-	fn1 := "Markdown " + m.mdfileinput.View()
-	fn2 := "PNG file " + m.pngfileinput.View()
+	fn1 := "\nMarkdown " + m.mdfileinput.View()
+	fn2 := "PNG file " + m.pngfileinput.View() + "\n"
 
 	var statusLine string
 	if !m.timer.Timedout() {
@@ -182,7 +208,8 @@ func (m model) View() string {
 		m.status = ""
 	}
 
-	return fmt.Sprintf("\n%s\n%s\n%s\n\n%s\n%s\n\n%s\n\n%s\n\n",
+	leftSide := lipgloss.JoinVertical(
+		lipgloss.Left,
 		intro,
 		greyStyle.Render(eg),
 		ta,
@@ -191,4 +218,11 @@ func (m model) View() string {
 		helpView,
 		statusLine,
 	)
+	glamoured, _ := glamour.Render(m.preview, "dark")
+	bothSides := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		leftHalfStyle.Render(leftSide),
+		glamoured,
+	)
+	return bothSides
 }

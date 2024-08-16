@@ -15,7 +15,7 @@ func main() {
 		log.Fatalf("readconfig %s", err)
 	}
 
-	p := tea.NewProgram(ui.InitialModel(conf))
+	p := tea.NewProgram(ui.InitialModel(conf), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}

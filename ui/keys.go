@@ -31,7 +31,7 @@ var keys = keyMap{
 	),
 	Generate: key.NewBinding(
 		key.WithKeys("ctrl+g"),
-		key.WithHelp("ctr+g", "generate files"),
+		key.WithHelp("ctr+g", "generate"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("ctrl+c"),

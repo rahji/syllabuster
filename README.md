@@ -7,33 +7,36 @@ with an integer number of points for each assignment/task and sum them to arrive
 at a total number of available points for the semester. 
 
 With this tool, I can enter a list of assignments with their corresponding point values 
-and get a markdown page that contains the following:
+and get two files as output:
 
-1. A markdown table that lists the assignments and their corresponding point values
-2. A pie chart showing the distribution of points across assignments
-3. A markdown table that shows how a student's end-of-semester point total translates to a letter grade
+1. A markdown file containing tables listing the assignments and the letter grade scale
+2. A PNG file containing a pie chart showing the distribution of points for the whole semester
 
-The letter grade scale is based on an existing scale for your school, which 
-can be specified in the configuration file. While the reference scale may use fractional 
-numbers, all other points will be whole numbers.
+The letter grade scale is based on an existing scale, which is specified in the configuration file.
+While the reference scale may use fractional numbers, all other points will be whole numbers.
 
-The configuration file contains the percentage-to-letter-grade scale and whatever assignments/points
-were entered the last time the program was used.
+This tool is a little weird, but it does exactly what I need.
+
+## Input Format
+
+When entering the list of assignments, be sure to look at the examples shown. 
+The requirements are:
+
+* One assignment per line
+* Each line starts with the number of points for the assignment
+* An optional multiplier can be added next (ie: "300 x 4" if there are four 300-point assignments)
+* The name of the assignment is next
+* You can add an optional short-name for the project in parenthesis. This is used for the pie chart labels.
 
 ## Installation
 
-The easiest way to install is to download the appropriate archive file from the [Releases](https://github.com/rahji/syllabuster/releases/latest) page, place the `syllabuster` binary [somewhere in your path](https://zwbetz.com/how-to-add-a-binary-to-your-path-on-macos-linux-windows/), and run it from your terminal (eg: Terminal.app in MacOS or [Windows Terminal](https://apps.microsoft.com/store/detail/windows-terminal/9N0DX20HK701?hl=en-us&gl=us&rtc=1))
-
-**OR** If you have `go` installed you can clone this repo and run `make build`
-
-You might want to install [glow](https://github.com/charmbracelet/glow), too.
+1. Clone the repo
+2. Run `make build` from your terminal
 
 ## Usage
 
-Run the command by entering `syllabuster` from your terminal. 
+Run the command by entering `syllabuster` from your terminal 
 
-## Todo
+## Notes
 
-* enter filename for markdown and for chart
-* get button to work for generating markdown and image
-* get --help and --version to work without cobra
+* The configuration file also contains the assignments and points but that's unused at the moment.
